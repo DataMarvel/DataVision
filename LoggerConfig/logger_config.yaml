@@ -1,0 +1,25 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+    simple:
+        format: "%(asctime)s - %(filename)s - %(levelname)s - %(message)s"
+        datefmt: '%F %T'
+
+handlers:
+    console:
+        class: logging.StreamHandler
+        level: DEBUG
+        formatter: simple
+        stream: ext://sys.stdout
+    info_file_handler:
+        class: logging.handlers.TimedRotatingFileHandler
+        level: DEBUG
+        formatter: simple
+        filename: ./vision/vision_log.log
+        interval: 1
+        backupCount: 2
+        encoding: utf8
+        when: H
+root:
+    level: DEBUG
+    handlers: [console, info_file_handler]
