@@ -1,0 +1,7 @@
+{
+    "Email": {
+        "mail_host": "smtp.qq.com",
+        "mail_post": "465",
+        "sender": "379978424@qq.com"
+    }
+}
