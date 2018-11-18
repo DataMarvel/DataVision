@@ -1,0 +1,4 @@
+curio==0.10
+asks==2.2.0
+PyYAML==3.13
+aiosmtplib==1.0.3

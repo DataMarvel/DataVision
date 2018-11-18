@@ -5,7 +5,7 @@ Created on 2018年11月15日
 @file: EmailNotification
 """
 # Python内置库
-import time
+import json
 import socket
 import asyncio
 import mimetypes
@@ -28,12 +28,11 @@ from email.mime.nonmultipart import MIMENonMultipart
 # Python第三方库
 import aiosmtplib
 
+# 项目内部库
+from DataVision.LoggerHandler.logger import VisionLogger
 
-mail_host = 'smtp.qq.com'
-mail_port = 465
-mail_user = '379978424'
-mail_pass = 'zwwhkmioytekcagb'
-mail_postfix = 'qq.com'
+# 日志路径
+LOGGER_PATH = '../../DataVision/LoggerConfig/logger_config.yaml'
 
 
 def get_current_ip() -> str:
@@ -53,29 +52,53 @@ class EmailSender(object):
     会返回发送的task.
     """
 
-    def __init__(self, loop) -> None:
-        # 初始化
+    def __init__(self, loop, config_path: str = "") -> None:
+        """
+        异步邮件发送器
+        :param loop: 事件循环 [Windows下显示 <class 'asyncio.windows_events._WindowsSelectorEventLoop'>]
+        :param config_path: 配置文件目录 默认在LoggerConfig中
+        """
+        # 日志
+        self._logger = VisionLogger(LOGGER_PATH)
+
+        # 配置文件目录
+        self._path = config_path
+        if self._path == "":
+            self._path = ".././LoggerConfig/logger_notification_config.json"
+
+        # 加载配置文件
+        mail_config = self._load_config_from_json()
+        self._mail_host = mail_config['mail_host']
+        self._mail_port = mail_config['mail_port']
+        self._mail_user = mail_config['mail_user']
+        self._mail_password = mail_config['mail_password']
+        self._mail_suffix = mail_config['mail_suffix']
+
+        # 基本变量
         self.smtp = None
         self.loop = loop
         self.loop.run_until_complete(self.stmp_connection())
 
+    def _load_config_from_json(self) -> dict:
+        return json.load(open(self._path, 'r'))['Email']
+
     async def stmp_connection(self):
         self.smtp = aiosmtplib.SMTP(
             loop=self.loop,
-            hostname=mail_host,
-            port=mail_port,
+            hostname=self._mail_host,
+            port=self._mail_port,
             use_tls=True
         )
         await self.smtp.connect()
         await self.smtp.login(
-            mail_user, mail_pass
+            self._mail_user, self._mail_password
         )
-        print("[Mail] smtp connected !")
+        self._logger.vision_logger(level="INFO", log_msg="邮件服务器连接成功!")
 
     async def stmp_close(self):
         self.smtp.close()
         self.smtp = None
-        print("[Mail] smtp connection closed !")
+        self._logger.vision_logger(level="INFO", log_msg="邮件服务器关闭成功!")
         return True
 
     async def send_email(self,
@@ -99,9 +122,9 @@ class EmailSender(object):
             attachments (Optional[Dict[str, str]]): - 附件中的文件,默认为None
         """
         if sender_name:
-            sender = sender_name + "<" + "{}@{}".format(mail_user, mail_postfix) + ">"
+            sender = sender_name + "<" + "{}@{}".format(self._mail_user, self._mail_suffix) + ">"
         else:
-            sender = "{}@{}".format(mail_user, mail_postfix)
+            sender = "{}@{}".format(self._mail_user, self._mail_suffix)
         if isinstance(target_list, (list, tuple)):
             targetlist = tuple(target_list)
             targets = ", ".join(targetlist)
@@ -211,14 +234,10 @@ def make_message(
         text = MIMEText(content, 'html', 'utf-8')
         msg.attach(text)
         if msgimgs:
-            asparagus_cid = {}
             for i, v in msgimgs.items():
                 c_type, encoding = mimetypes.guess_type(i)
                 _maintype, _subtype = c_type.split('/', 1)
-                # asparagus_cid[i] = make_msgid()
-                # postfix = i.split(".")[-1]
                 msg_image = MIMEImage(v, _subtype)
-                # msgImage.add_header('Content-Type', 'image/{}'.format(postfix))
                 msg_image.add_header('Content-ID', '<{}>'.format(i.split(".")[0]))
                 msg_image.add_header('Content-Disposition', 'inline')
                 msg.attach(msg_image)
@@ -289,16 +308,8 @@ def send(target_list: Union[List[str], str],
     loop.run_until_complete(s_m.stmp_close())
 
 
-# if __name__ == '__main__':
-#     mail_content = \
-#         "告警主机:{}\n告警时间:{}\n告警信息:{}\n告警项目:{}\n问题详情:{}".format(
-#             get_current_ip(),
-#             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-#             "测试",
-#             "e_bank_assistant",
-#             "测试发送报警消息")
-#     loop.run_until_complete(
-#         s_m.send_email_no_wait(target_list="379978424@qq.com",
-#                                subject="测试报警",
-#                                content=mail_content,
-#                                sender_name="爬虫监控告警<379978424@qq.com>"))
+if __name__ == '__main__':
+    send(target_list="379978424@qq.com",
+         subject="测试报警 - DataVision",
+         content="From DataVision",
+         sender_name="监控报警邮件")

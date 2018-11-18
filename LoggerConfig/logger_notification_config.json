@@ -1,7 +1,13 @@
 {
     "Email": {
         "mail_host": "smtp.qq.com",
-        "mail_post": "465",
-        "sender": "379978424@qq.com"
+        "mail_port": "465",
+        "mail_user": "379978424",
+        "mail_password": "zwwhkmioytekcagb",
+        "mail_suffix": "qq.com"
+    },
+    "DingDing": {
+        "robot_url": "https://oapi.dingtalk.com/robot/send?access_token=",
+        "robot_token": "f855f4a823468a8097f4c720e04b51d4b479ea6408d1daea7f9eacb4700670d9"
     }
 }
