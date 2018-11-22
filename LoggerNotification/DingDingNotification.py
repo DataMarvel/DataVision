@@ -73,6 +73,13 @@ class DingDingSender(object):
         :param msg_type 消息类型
         :param msg_kwargs: 其他参数
         :return: 接口返回的结果
+        一、http(s)请求返回302，被网关层给拦截，一分钟只能发送20条，超过被加入黑名单5分钟。
+        二、http(s)请求返回200，需要根据http body中的json字符，其中errorCode和errorMsg细分如下：
+        String PARAM_ERROR = _300001_;   参数错误_
+        String MSG_TOO_LONG = _101002_;   内容太长_
+        String MSG_TOOMUCH = _130101_;    发送太快_
+        String MSG_CONTENT_FORBID = _300004_;   内容不合法_
+        String SYSTEM_ERROR = _1001_;     系统错误
         """
         message = self.make_message(msgtype=msg_type, **msg_kwargs)
         if message is not None:

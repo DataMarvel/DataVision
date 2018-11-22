@@ -2,7 +2,7 @@ version: 1
 disable_existing_loggers: False
 formatters:
     simple:
-        format: "%(asctime)s - %(filename)s - %(levelname)s - %(message)s"
+        format: "%(asctime)s - File:%(filename)s - Line:%(lineno)d - Mode:%(levelname)s - Message:%(message)s"
         datefmt: '%F %T'
 
 handlers:
